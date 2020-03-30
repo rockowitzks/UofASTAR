@@ -10,6 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <math.h>
+
 using namespace std;
 
 // Matrix class for the 8 puzzle
@@ -31,7 +32,6 @@ class Matrix {
         for(unsigned int i = 0; i < 9; i++){
             this->tiles[i] = -1;
         }
-
     }
     // defines permitted moves
     int moves(){
@@ -78,7 +78,6 @@ class Matrix {
         // return actions avail
         return actions;
     }
-        
 };
 
 // the misplaced tiles heuristic function
@@ -102,19 +101,18 @@ int reachedGoal(Matrix *current){
     int goal[9] = {8,0,1,2,3,4,5,6,7};
     // if even one tile doesn't match, return 0
     for(unsigned int i = 0; i < 9; i++){
-        if(current->tiles[i] != goal[i])
+        if(current->tiles[i] != goal[i]){
             return 0;
+        }
     }
     return 1;
 }
 
 // updates the matrix values after a move
-Matrix* update(Matrix *current, int move)
-{
+Matrix* update(Matrix *current, int move){
     // create a predecessor called next
     Matrix *next = new Matrix;
 
-    // set the blank to the tile at 0
     int blank = current->tiles[0];
     // create a new tile
     int tile;
@@ -131,14 +129,14 @@ Matrix* update(Matrix *current, int move)
                else{
                    next->tiles[i] = current->tiles[i];
                }
-           }
+            }
             break;
             
         // move left
         case 2:
             tile = blank - 1;
-            for(unsigned int i = 0; i < 9; i++){
-                if(current->tiles[i] == blank - 1){
+            for(unsigned int i = 1; i < 9; i++){
+                if(current->tiles[i] == tile){
                     next->tiles[0] = tile;
                     next->tiles[i] = blank;
                 }
@@ -148,11 +146,11 @@ Matrix* update(Matrix *current, int move)
             }
             break;
             
-     // move down
+        // move down
         case 4:
             tile = blank + 3;
-            for(unsigned int i = 0; i < 9; i++){
-                if(current->tiles[i] == blank + 3){
+            for(unsigned int i = 1; i < 9; i++){
+                if(current->tiles[i] == tile){
                     next->tiles[0] = tile;
                     next->tiles[i] = blank;
                 }
@@ -162,11 +160,11 @@ Matrix* update(Matrix *current, int move)
             }
             break;
 
-    // move right
+        // move right
         default:
             tile = blank + 1;
-            for(unsigned int i = 0; i < 9; i++){
-                if(current->tiles[i] == blank + 1){
+            for(unsigned int i = 1; i < 9; i++){
+                if(current->tiles[i] == tile){
                     next->tiles[0] = tile;
                     next->tiles[i] = blank;
                 }
@@ -213,13 +211,12 @@ void addExpanded(Matrix *a_node){
     root++;
 }
 
-Matrix *subtractExpanded()
-{
+Matrix *subtractExpanded(){
     Matrix *popped = new Matrix;
-    if(root==-1)
+    if(root == -1){
         return NULL;
-    else
-    {
+    }
+    else{
         for(int i=0; i<9; i++)
             popped->tiles[i] = expanded[0].tiles[i];
         popped->parent = expanded[0].parent;
@@ -231,34 +228,30 @@ Matrix *subtractExpanded()
     }
 }
 
-void addExplored(int * state)
-{
+void addExplored(int * state){
     root_exp++;
-    for(int i=0; i<9; i++)
+    for(int i = 0; i < 9; i++){
         explored[root_exp][i] = state[i];
+    }
 }
 
-int alreadyExplored(int * state)
-{
-    int cnt = 0;
+int alreadyExplored(int * state){
+    int count = 0;
     for(long int i=0; i<=root_exp; i++)
     {
-        cnt = 0;
-        for(int j = 0; j < 9; j++)
-        {
-            if(explored[i][j] == state[j])
-            {
-                cnt++;
+        count = 0;
+        for(int j = 0; j < 9; j++){
+            if(explored[i][j] == state[j]){
+                count++;
             }
         }
-        if(cnt==9)
+        if(count == 9)
             return 1;
     }
     return 0;
 }
 
-void astar(Matrix initial_node)
-{
+void astar(Matrix initial_node){
     // create a new matrix pointer
     Matrix *initial = new Matrix;
     // point to the initial node
@@ -272,26 +265,22 @@ void astar(Matrix initial_node)
 
     addExpanded(initial);
 
-    while(true)
-    {
-        if(root==-1)
-        {
+    while(true){
+        if(root == -1){
             //cout<<"failure"<<endl;
             cout<<"no solution found"<<endl;
             return;
         }
         temp = subtractExpanded();
         addExplored(temp->tiles);
-        if(reachedGoal(temp))
-        {
+        if(reachedGoal(temp)){
             cout<<"solution found"<<endl;
-            while(temp)
-            {
+            while(temp){
                 int reverse[9];
                 for(int i=0; i<9; i++){
                     reverse[temp->tiles[i]] = i;
                 }
-                for(int i=0; i<9; i++){
+                for(int i = 0; i < 9; i++){
                     if(i != 0 && i % 3 == 0) cout << endl;
                     cout<<reverse[i]<<" ";
                 }
@@ -362,8 +351,7 @@ void astar(Matrix initial_node)
         
         for(int i = 0; i < 4; i++)
         {
-            if(possible_actions[i]==1)
-            {
+            if(possible_actions[i] == 1){
                 // generate a node and update the board
                 gen_node = update(temp,pow(2,i));
                 // if generated node not explored, expand it
@@ -463,14 +451,16 @@ int main(int argc, const char * argv[]) {
 
     cout<<"Welcome!"<<endl;
     cout<<"Enter the positions of the tiles!"<<endl;
-    
-
 
     for(unsigned int i = 0; i < 9; i++){
         cin>>pos;
 //        initial.tiles[i] = pos;
         initial.tiles[pos] = i;
     }
+    
+    // TODO: print out just the moves
+    // TODO: refactor the shit outta this code
+    // TODO: allow user entry of the goal state
     cout<<"Processing..." << endl;
 
     astar(initial);
