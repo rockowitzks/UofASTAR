@@ -6,6 +6,9 @@
 //  Copyright © 2020 r0. All rights reserved.
 //
 
+/*
+  "You miss 100% of the shots you don't take. -Wayne Gretzky" - Michael Scott
+*/
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -26,66 +29,65 @@ class Matrix {
     Matrix(){
         // defaultly 0
         this->cost = 0;
-        // defaultly null
-        this->parent = NULL;
+
         // using -1 as the initial tile value
         for(unsigned int i = 0; i < 9; i++){
             this->tiles[i] = -1;
         }
+        // defaultly null
+        this->parent = NULL;
     }
-
     // defines permitted moves
     int moves(){
         //up = 1; left = 2; down = 4; right = 8;
         //e.g: up,left,right = 11;
         // blank set to first tile
         int blank = tiles[0];
-        // actions initialized to -1
-        int actions = 0;
+        // moves initialized to -1
+        int moves = 0;
         // find out how many moves avail
         switch(blank){
                 // RD
-            case 0: actions =  12;
+            case 0: moves =  12;
                 break;
                 // LDR
-            case 1: actions =  14;
+            case 1: moves =  14;
                 break;
                 // LD
-            case 2: actions = 6;
+            case 2: moves = 6;
                 break;
                 // URD
-            case 3: actions = 13;
+            case 3: moves = 13;
                 break;
                 // ULDR
-            case 4: actions = 15;
+            case 4: moves = 15;
                 break;
                 // ULD
-            case 5: actions = 7;
+            case 5: moves = 7;
                 break;
                 // RU
-            case 6: actions = 9;
+            case 6: moves = 9;
                 break;
                 // LUR
-            case 7: actions = 11;
+            case 7: moves = 11;
                 break;
                 // LU
-            case 8: actions = 3;
+            case 8: moves = 3;
                 break;
                 // no action available
             default:
-                actions = 0;
+                moves = 0;
                 break;
         }
-        // return actions avail
-        return actions;
+        // return moves avail
+        return moves;
     }
 };
 
 // the misplaced tiles heuristic function
-int misplacedTiles(Matrix *current){
+int misplacedTiles(Matrix *current, int goal[]){
     //heuristic is the number of the misplaced tiles in the state.
-    // TODO: support input of goal matrix as array in function
-    int goal[9] = {8,0,1,2,3,4,5,6,7};
+    // int goalz[9] = {8,0,1,2,3,4,5,6,7};
     int misplaced = 0;
     // if tiles don't match, increment misplaced
     for(unsigned int i = 0; i < 9; i++){
@@ -96,10 +98,32 @@ int misplacedTiles(Matrix *current){
     return misplaced;
 }
 
+// the misplaced tiles heuristic function
+int manhattanDistance(Matrix *current, int goal[]){
+    //heuristic is the number of the misplaced tiles in the state.
+    // int goalz[9] = {8,0,1,2,3,4,5,6,7};
+    int manhattan = 0;
+
+    //  h = abs (current_cell.x – goal.x) + 
+    //  abs (current_cell.y – goal.y)
+
+    int x1, x2, y1, y2;
+
+    x1 = current->tiles[0] % 3;
+    x2 = goal[0] % 3;
+
+    y1 = current->tiles[0] / 3;
+    y2 = goal[0] / 3;
+
+    manhattan = abs(x1 - x2) + (y1 - y2);
+    
+    // if tiles don't match, increment misplaced
+    return manhattan;
+}
 // determine if the goal has been reached
-int reachedGoal(Matrix *current){
-    // TODO: support input of goal matrix as array in function
-    int goal[9] = {8,0,1,2,3,4,5,6,7};
+int reachedGoal(Matrix *current, int goal[]){
+    // int goalz[9] = {8,0,1,2,3,4,5,6,7};
+
     // if even one tile doesn't match, return 0
     for(unsigned int i = 0; i < 9; i++){
         if(current->tiles[i] != goal[i]){
@@ -114,71 +138,53 @@ Matrix* update(Matrix *current, int move){
     // create a predecessor called next
     Matrix *next = new Matrix;
 
-    int blank = current->tiles[0];
-    // create a new tile
+    // create a temporary tile
     int tile;
+    // grab the blank tile
+    int blank = current->tiles[0];
 
+
+    // using linear indexing, m
     switch(move){
         // move up
         case 1:
             tile = blank - 3;
-            for(unsigned int i = 1; i < 9; i++){
-               if(current->tiles[i] == tile){
-                   next->tiles[0] = tile;
-                   next->tiles[i] = blank;
-               }
-               else{
-                   next->tiles[i] = current->tiles[i];
-               }
-            }
+
             break;
             
         // move left
         case 2:
             tile = blank - 1;
-            for(unsigned int i = 1; i < 9; i++){
-                if(current->tiles[i] == tile){
-                    next->tiles[0] = tile;
-                    next->tiles[i] = blank;
-                }
-                else{
-                    next->tiles[i] = current->tiles[i];
-                }
-            }
+
             break;
             
         // move down
         case 4:
             tile = blank + 3;
-            for(unsigned int i = 1; i < 9; i++){
-                if(current->tiles[i] == tile){
-                    next->tiles[0] = tile;
-                    next->tiles[i] = blank;
-                }
-                else{
-                    next->tiles[i] = current->tiles[i];
-                }
-            }
+
             break;
 
         // move right
         default:
             tile = blank + 1;
-            for(unsigned int i = 1; i < 9; i++){
-                if(current->tiles[i] == tile){
-                    next->tiles[0] = tile;
-                    next->tiles[i] = blank;
-                }
-                else{
-                    next->tiles[i] = current->tiles[i];
-                }
-            }
+
             break;
+    }
+
+    for(unsigned int i = 1; i < 9; i++){
+        if(current->tiles[i] == tile){
+            next->tiles[0] = tile;
+            next->tiles[i] = blank;
+        }
+        else{
+            next->tiles[i] = current->tiles[i];
+        }
     }
     // change next's parent to this node
     next->parent = current;
     // increment cost by 1
     next->cost = current->cost + 1;
+    
     return next;
 }
 
@@ -191,9 +197,10 @@ long int root = -1;
 int explored[1000000][9];
 long int root_exp = -1;
 
-void addExpanded(Matrix *a_node){
+void addExpanded(Matrix *a_node, int goal[]){
     long int i = 0;
     long int j = 0;
+
     
     // if this is the first expansion, set the initial node
     if(root == -1){
@@ -201,7 +208,7 @@ void addExpanded(Matrix *a_node){
     }
     // otherwise increment i for distance away from the root as long as its a better path
     else{
-        while(i <= root && expanded[i].cost + misplacedTiles(&expanded[i]) <= a_node->cost + misplacedTiles(a_node)){
+        while(i <= root && expanded[i].cost + misplacedTiles(&expanded[i], goal) <= a_node->cost + misplacedTiles(a_node, goal)){
             i++;
         }
         for(j = root; j >= i; --j){
@@ -213,151 +220,173 @@ void addExpanded(Matrix *a_node){
 }
 
 Matrix *subtractExpanded(){
-    Matrix *popped = new Matrix;
+    // create new subtracted Matrix
+    Matrix *subtracted = new Matrix;
+    // if the root is -1, found top, return NULL
     if(root == -1){
         return NULL;
     }
+    
     else{
-        for(int i=0; i<9; i++)
-            popped->tiles[i] = expanded[0].tiles[i];
-        popped->parent = expanded[0].parent;
-        popped->cost = expanded[0].cost;
-        for(long int i=0; i<root; i++)
+        for(unsigned long int i = 0; i < 9; i++){
+            subtracted->tiles[i] = expanded[0].tiles[i];
+        }
+        subtracted->parent = expanded[0].parent;
+        subtracted->cost = expanded[0].cost;
+        for(unsigned long int i = 0; i < root; i++){
             expanded[i] = expanded[i+1];
+        }
         root--;
-        return popped;
+        return subtracted;
     }
 }
 
-void addExplored(int * state){
+void addExplored(int *tile){
     root_exp++;
     for(int i = 0; i < 9; i++){
-        explored[root_exp][i] = state[i];
+        explored[root_exp][i] = tile[i];
     }
 }
 
-int alreadyExplored(int * state){
+int alreadyExplored(int *tile){
     int count = 0;
-    for(long int i=0; i<=root_exp; i++)
-    {
+    for(unsigned long int i = 0; i <= root_exp; i++){
         count = 0;
         for(int j = 0; j < 9; j++){
-            if(explored[i][j] == state[j]){
+            if(explored[i][j] == tile[j]){
                 count++;
             }
         }
-        if(count == 9)
+        if(count == 9){
             return 1;
+        }
     }
     return 0;
 }
 
-void astar(Matrix initial_node){
+void getMove(int array[]){
+  /*
+  for(unsigned int i = 0; i < 9; i++){
+    switch(errrrrrrrrrrrr) {
+      case NUT:
+        break;
+      case Squashy:
+        break;
+      default:
+        break;
+    }
+  }
+  */
+}
+void astar(Matrix initial_state, int goal[]){
     // create a new matrix pointer
     Matrix *initial = new Matrix;
     // point to the initial node
-    initial = &initial_node;
+    initial = &initial_state;
 
-    Matrix *temp;
-    Matrix *gen_node;
+    Matrix *temp_matrix;
+    Matrix *new_matrix;
     
-    int actions;
-    int possible_actions[4];
+    int moves;
+    int moves_avail[4];
 
-    addExpanded(initial);
+    addExpanded(initial, goal);
 
-    while(true){
+    while(1){
+        // reached the end without finding the goal state
         if(root == -1){
-            //cout<<"failure"<<endl;
             cout<<"no solution found"<<endl;
             return;
         }
-        temp = subtractExpanded();
-        addExplored(temp->tiles);
-        if(reachedGoal(temp)){
+        temp_matrix = subtractExpanded();
+        addExplored(temp_matrix->tiles);
+        if(reachedGoal(temp_matrix, goal)){
             cout<<"solution found"<<endl;
-            while(temp){
+            while(temp_matrix){
                 int reverse[9];
-                for(int i=0; i<9; i++){
-                    reverse[temp->tiles[i]] = i;
+                //Switch index with value
+                for(int i = 0; i < 9; i++){
+                    reverse[temp_matrix->tiles[i]] = i;
                 }
+                // printing the actual values at their indices
                 for(int i = 0; i < 9; i++){
                     if(i != 0 && i % 3 == 0) cout << endl;
-                    cout<<reverse[i]<<" ";
+                    cout << reverse[i] << " ";
                 }
-                cout<<endl<<endl;
-                temp = temp->parent;
+                cout << endl << endl;
+                temp_matrix = temp_matrix->parent;
             }
             return;
         }
 
-        actions = temp->moves();
-        switch(actions)
+        moves = temp_matrix->moves();
+        switch(moves)
         {
             case 12:  // RD
-                possible_actions[0]=0;
-                possible_actions[1]=0;
-                possible_actions[2]=1;
-                possible_actions[3]=1;
+                moves_avail[0]=0;
+                moves_avail[1]=0;
+                moves_avail[2]=1;
+                moves_avail[3]=1;
                 break;
-            case 14: // LDR
-                possible_actions[0]=0;
-                possible_actions[1]=1;
-                possible_actions[2]=1;
-                possible_actions[3]=1;
+            case 14: // LRD
+                moves_avail[0]=0;
+                moves_avail[1]=1;
+                moves_avail[2]=1;
+                moves_avail[3]=1;
                 break;
             case 6: // LD
-                possible_actions[0]=0;
-                possible_actions[1]=1;
-                possible_actions[2]=1;
-                possible_actions[3]=0;
+                moves_avail[0]=0;
+                moves_avail[1]=1;
+                moves_avail[2]=1;
+                moves_avail[3]=0;
                 break;
             case 13: // URD
-                possible_actions[0]=1;
-                possible_actions[1]=0;
-                possible_actions[2]=1;
-                possible_actions[3]=1;
+                moves_avail[0]=1;
+                moves_avail[1]=0;
+                moves_avail[2]=1;
+                moves_avail[3]=1;
                 break;
-            case 15: // ULDR
-                possible_actions[0]=1;
-                possible_actions[1]=1;
-                possible_actions[2]=1;
-                possible_actions[3]=1;
+            case 15: // ULRD
+                moves_avail[0]=1;
+                moves_avail[1]=1;
+                moves_avail[2]=1;
+                moves_avail[3]=1;
                 break;
             case 7: // ULD
-                possible_actions[0]=1;
-                possible_actions[1]=1;
-                possible_actions[2]=0;
-                possible_actions[3]=0;
+                moves_avail[0]=1;
+                moves_avail[1]=1;
+                moves_avail[2]=0;
+                moves_avail[3]=0;
                 break;
-            case 9: // RU
-                possible_actions[0]=1;
-                possible_actions[1]=0;
-                possible_actions[2]=0;
-                possible_actions[3]=1;
+            case 9: // UR
+                moves_avail[0]=1;
+                moves_avail[1]=0;
+                moves_avail[2]=0;
+                moves_avail[3]=1;
                 break;
             case 11: // LUR
-                possible_actions[0]=1;
-                possible_actions[1]=1;
-                possible_actions[2]=0;
-                possible_actions[3]=1;
+                moves_avail[0]=1;
+                moves_avail[1]=1;
+                moves_avail[2]=0;
+                moves_avail[3]=1;
                 break;
             case 3: // LU
-                possible_actions[0]=1;
-                possible_actions[1]=1;
-                possible_actions[2]=0;
-                possible_actions[3]=0;
+                moves_avail[0]=1;
+                moves_avail[1]=1;
+                moves_avail[2]=0;
+                moves_avail[3]=0;
                 break;
         }
         
         for(int i = 0; i < 4; i++)
         {
-            if(possible_actions[i] == 1){
-                // generate a node and update the board
-                gen_node = update(temp,pow(2,i));
-                // if generated node not explored, expand it
-                if(alreadyExplored(gen_node->tiles) == 0)
-                    addExpanded(gen_node);
+            // for every available move, update the new matrix
+            if(moves_avail[i]){
+                // update the new matrix
+                new_matrix = update(temp_matrix,pow(2,i));
+                // if the new matrix is not part of the explored set, expand and explore it
+                if(alreadyExplored(new_matrix->tiles) == 0)
+                    addExpanded(new_matrix, goal);
             }
         }
 
@@ -365,106 +394,63 @@ void astar(Matrix initial_node){
     
 }
 
-// returns true if goal state found, false if not found
-//bool goal_state(vector<int> init, vector<int> goal){
-//    return (init == goal);
-//}
 
-// returns the number of misplaced tiles
-//int misplaced_tiles(vector<int> init, vector<int> goal){
-//
-//    int estimate = 0;
-//    for(unsigned int i = 0; i < 9; i++){
-//        if(init.at(i) != goal.at(i)) estimate++;
-//    }
-//    return estimate;
-//}
-
-//// prints a vector
-//void print_vector(vector<int> vec){
-//    for(unsigned int i = 0; i < vec.size(); i++){
-//        if(i % 3 == 0) cout << endl;
-//        cout << vec.at(i) << " ";
-//    }
-//    cout << endl << endl;
-//}
-//
-//// turns the user input for state into a vector
-//void get_state(vector<int> &state){
-//
-//    string puzzleNumbers;
-//    for(unsigned int i = 0; i < 9; i++)
-//    {
-//
-//        // grab the entered numbers
-//        cin >> puzzleNumbers;
-//        // convert all non_blank tiles to ints and push em back
-//        if(puzzleNumbers != "_"){
-//            try{
-//                int number;
-//                number = stoi(puzzleNumbers);
-//                state.push_back(number);
-//            }
-//            // if it fails, let em know
-//            catch(int e){
-//                cout << "Failed to convert entered number to integer";
-//            }
-//        }
-//        // store the blank tile as 0 in init
-//        else{
-//            state.push_back(0);
-//        }
-//    }
-//}
-//
-//// sets the heuristic used by the program
-//void select_heuristic(string &sel){
-//    char selection;
-//    cin >> selection;
-//    if(selection == 'a') cout << "you selected 'a'" << endl;
-//    else if(selection == 'b') cout << "you selected 'b'" << endl;
-//    else if(selection == 'c') cout << "you selected 'c'" << endl;
-//    else{
-//        cout << "you selected an incorrect option" << endl;
-//        return;
-//    }
-//    sel = selection;
-//}
-
-int main(int argc, const char * argv[]) {
-    vector<int> initialState;
-    vector<int> goalState;
-//    string selection;
-//
-//    cout << "Enter the initial state" << endl;
-//    get_state(initialState);
-//    print_vector(initialState);
-//    cout << "Enter the goal state" << endl;
-//    get_state(goalState);
-//    print_vector(goalState);
-//
-//    cout << "Select the heuristic\n\ta) Number of misplace tiles\n\tb) Manhattan distance\n\tc) Ain't nobody got time for that\n";
-//    select_heuristic(selection);
-//    cout << selection << endl;
+int main(int argc, const char * argv[]) {     
+      
+    Matrix initial_state;
+    int value;
     
-    Matrix initial;
-    int pos;
 
-    cout<<"Welcome!"<<endl;
-    cout<<"Enter the positions of the tiles!"<<endl;
+    cout<<"8 Puzzle Solver"<<endl;
+    cout<<"Please Enter the Initial State"<<endl;
 
     for(unsigned int i = 0; i < 9; i++){
-        cin>>pos;
-//        initial.tiles[i] = pos;
-        initial.tiles[pos] = i;
+        cin>>value;
+//        initial_state.tiles[i] = value;
+        initial_state.tiles[value] = i;
     }
     
+    value = 0;
+    int goal[9];
+    
+    cout<<"Please Enter the Goal State"<<endl;
+    for(unsigned int i = 0; i < 9; i++){
+            cin >> value;
+    //        initial_state.tiles[i] = value;
+            goal[value] = i;
+        }
+    
+    //cout << "You entered ";
+    //for(unsigned int i = 0; i < 9; i++){
+    //     cout << goal[i] << " ";
+    //}
+    //cout << endl;
+    
+    //Determine heuristic
+    function<void()> h_function;
+    int h_funct_val = 0;
+    
+    cout << "Please Enter 0 for misplaced tiles or 1 for Manhattan" << endl;
+    cin >> h_funct_val;
+    
+    if (h_funct_val == 1){
+      h_function = &misplacedTiles;
+      cout << "You chose Manhattan Heuristic" << endl;
+    }
+    else {
+      h_function = &manhattanDistance;
+      cout << "You chose Misplaced Tiles heuristic" << endl;
+    }
+
+
     // TODO: print out just the moves
     // TODO: refactor the shit outta this code
     // TODO: allow user entry of the goal state
     cout<<"Processing..." << endl;
 
-    astar(initial);
+    astar(initial_state, goal);
+
+    
     
     return 0;
 }
