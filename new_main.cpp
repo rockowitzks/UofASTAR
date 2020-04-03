@@ -34,18 +34,6 @@ class Matrix {
         }
     }
 
-    //Overload '=' operator
-    Matrix operator = (Matrix const &obj) { 
-        Matrix res;
-
-        for(int i=0; i<9; i++) {
-            res.tiles[i] = obj.tiles[i];
-        }
-        res.cost = obj.cost;
-        res.parent = obj.parent; 
-        return res;
-    } 
-
     // defines permitted moves
     int moves(){
         //up = 1; left = 2; down = 4; right = 8;
